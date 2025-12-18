@@ -1,26 +1,51 @@
-import React, { useState } from 'react';
-import { FlatList, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import TaskComponent, { Task } from '../../component/TaskComponent';
 import AddTask from './AddTask';
 import EditTask from './EditTask';
 import uuid from 'react-native-uuid';
+import { useDispatch, useSelector } from 'react-redux';
+import { clearUser } from '../../redux/slice';
+import { getUserFromDB } from '../../sqlite/database';
 
 const TaskDashboard: React.FC = () => {
   const [showAddTask, setShowAddTask] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-
+  const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
   const [tasks, setTasks] = useState<Task[]>([]);
+   const [user, setUser] = useState<any>(null);
 
-  console.log(tasks,'tasks');
-  
+    const [displayedTasks, setDisplayedTasks] = useState<Task[]>([]);
+  const [page, setPage] = useState(1);
+
+  const userEmail = useSelector((state: any) => state.user.user.email);
+  if (!userEmail) {
+    return <Text>...</Text>;
+  }
+  console.log(tasks, 'tasks');
+
+  useEffect(() => {
+    const loadDbUser = async () => {
+      const dbUser = await getUserFromDB();
+      console.log('dbUser', dbUser);
+      setUser(dbUser)
+    };
+    loadDbUser();
+  }, []);
+
   //
   const addTask = (task: Task) => {
-    setTasks(prev => [
-      ...prev,
-      { ...task, id: uuid.v4().toString(), completed: false },
-    ]);
+    setTasks(prev => [...prev, { ...task, completed: false }]);
     setShowAddTask(false);
   };
 
@@ -50,16 +75,55 @@ const TaskDashboard: React.FC = () => {
     setTasks(prev => prev.filter(t => t.id !== task.id));
   };
 
+  //
+
+  const TASKS_PER_PAGE = 10;
+ 
+  const hasMore = displayedTasks.length < tasks.length;
+
+  const loadMoreTasks = () => {
+    if (loading) return;
+
+    const nextPage = page + 1;
+    const start = (nextPage - 1) * TASKS_PER_PAGE;
+    const end = start + TASKS_PER_PAGE;
+
+    const nextTasks = tasks.slice(start, end);
+    if (nextTasks.length === 0) return; // No more tasks
+
+    setLoading(true);
+
+    setTimeout(() => {
+      setDisplayedTasks(prev => [...prev, ...nextTasks]);
+      setPage(nextPage);
+      setLoading(false);
+    }, 300); // small delay for smooth effect
+  };
+  //
+
+  const handleLogout = () => {
+    dispatch(clearUser()); // ✅ clear Redux user
+  };
+
   return (
     <>
       <SafeAreaView style={styles.container}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <Text>{userEmail}</Text>
+          <TouchableOpacity
+            style={{ padding: 7, backgroundColor: '#ffeeedff' }}
+            onPress={handleLogout}
+          >
+            <Text style={{ fontWeight: 800 }}>logout</Text>
+          </TouchableOpacity>{' '}
+        </View>
+        <Text>{user?.email}</Text>
         {showAddTask ? (
           <AddTask addTask={addTask} onBack={() => setShowAddTask(false)} />
         ) : (
           <>
             <Text style={styles.heading}>Task Dashboard</Text>
             <Text style={styles.heading}>Total task: {tasks.length}</Text>
-
             <FlatList
               data={tasks}
               keyExtractor={item => item.id!}
@@ -72,8 +136,16 @@ const TaskDashboard: React.FC = () => {
                   onEdit={handleEdit}
                 />
               )}
+              onEndReached={loadMoreTasks}
+              onEndReachedThreshold={0.5} // Trigger when 50% from the bottom
+              ListFooterComponent={
+                loading && hasMore ? (
+                  <Text style={{ textAlign: 'center', padding: 10 }}>
+                    Loading...
+                  </Text>
+                ) : null
+              }
             />
-
             <TouchableOpacity
               style={styles.addBtn}
               onPress={() => setShowAddTask(true)}
@@ -98,6 +170,8 @@ const TaskDashboard: React.FC = () => {
 };
 
 export default TaskDashboard;
+
+// const getStyles = (isDarkMode: boolean) => StyleSheet.create({});
 
 const styles = StyleSheet.create({
   container: {

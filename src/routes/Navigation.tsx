@@ -8,10 +8,12 @@ import AppRoutes from './Approutes';
 import AuthRoutes from './AuthRoutes';
 const Stack = createStackNavigator();
 const Navigation = () => {
-  const token = true;
-  //   const token = useSelector(state => state.rootReducer.accessToken.token);
+  const token = false;
+  const user = useSelector((state: any)=> state.user.user)
+  //   const token = useSelector(state => state.accessToken.token);
+console.log("user loggedin", user);
 
-  return <>{token ? <AppRoutes /> : <AuthRoutes />}</>;
+  return <>{user ? <AppRoutes /> : <AuthRoutes />}</>;
 };
 
 export default Navigation;

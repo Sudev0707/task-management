@@ -26,8 +26,8 @@ const AddTask: React.FC<Props> = ({ addTask, onBack }) => {
     if (isDisabled) return;
 
     addTask({
-    //   id: uuid.v4().toString(),
-      id: Math.random().toString(36).substr(2, 9),
+      id: uuid.v4().toString(),
+    //   id: Math.random().toString(36).substr(2, 9),
       title: title.trim(),
       description: description.trim(),
       completed: false,

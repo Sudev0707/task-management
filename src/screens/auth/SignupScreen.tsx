@@ -10,7 +10,8 @@ import React, { useState } from 'react';
 import auth from '@react-native-firebase/auth';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-
+import { useDispatch } from 'react-redux'
+import {storeUser} from "../../redux/slice"
 type AuthStack = {
   Login: undefined;
 };
@@ -23,7 +24,7 @@ const SignupScreen: React.FC = () => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
+const dispatch = useDispatch();
   //
   const handleSignup = async () => {
     if (!email || !password) {
@@ -36,8 +37,9 @@ const SignupScreen: React.FC = () => {
         email.trim(),
         password,
       );
+      dispatch(storeUser({uid: res.user.uid, email: res.user.email}))
 
-      console.log( res.user.email);
+      console.log( res);
       Alert.alert( 'account created');
 
       navigation.navigate('Login');
@@ -52,6 +54,7 @@ const SignupScreen: React.FC = () => {
 
       <TextInput
         placeholder="Enter email"
+        placeholderTextColor={'gray'}
         value={email}
         onChangeText={setEmail}
         style={styles.input}
@@ -61,6 +64,7 @@ const SignupScreen: React.FC = () => {
 
       <TextInput
         placeholder="Enter password"
+         placeholderTextColor={'gray'}
         value={password}
         onChangeText={setPassword}
         style={styles.input}
@@ -97,6 +101,7 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 12,
     borderRadius: 8,
+    color:"#000"
   },
   btn: {
     backgroundColor: '#000',

@@ -24,6 +24,9 @@ const EditTask: React.FC<Props> = ({ visible, task, onClose, onSave }) => {
     if (task) {
       setTitle(task.title);
       setDescription(task.description);
+    }else{
+        setTitle('')
+        setDescription('')
     }
   }, [task]);
 

@@ -8,12 +8,14 @@ import {
 } from 'react-native';
 import React, { useState } from 'react';
 import auth from '@react-native-firebase/auth';
-import { useDispatch } from 'react-redux';
+// import { useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 // import { setUser, setToken } from '../../store/authSlice';
 // import uuid from 'react-native-uuid';
-
+import { storeUser } from '../../redux/slice';
+import { useDispatch } from 'react-redux';
+import { saveUserToDB } from '../../sqlite/database';
 type AuthStack = {
   Signup: undefined;
 };
@@ -25,11 +27,12 @@ type Navigation = NativeStackNavigationProp<AuthStack & AppStack>;
 const LoginScreen: React.FC = () => {
   const navigation = useNavigation<Navigation>();
   // const navigation = useNavigation();
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
 
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+  const dispatch = useDispatch();
 
   const handleLogin = async (): Promise<void> => {
     if (!email || !password) {
@@ -55,6 +58,8 @@ const LoginScreen: React.FC = () => {
       //   }),
       // );
       // dispatch(setToken(token));
+      await saveUserToDB({ uid: res.user.uid, email: res.user.email });
+      dispatch(storeUser({ uid: res.user.uid, email: res.user.email }));
 
       // if login success redirect
       navigation.replace('Dashboard');
@@ -71,6 +76,7 @@ const LoginScreen: React.FC = () => {
 
       <TextInput
         placeholder="Email"
+           placeholderTextColor={'gray'}
         value={email}
         onChangeText={setEmail}
         style={styles.input}
@@ -79,6 +85,7 @@ const LoginScreen: React.FC = () => {
 
       <TextInput
         placeholder="Password"
+           placeholderTextColor={'gray'}
         value={password}
         onChangeText={setPassword}
         secureTextEntry
@@ -120,6 +127,7 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 12,
     borderRadius: 8,
+    color: '#000',
   },
   button: {
     backgroundColor: '#000',
