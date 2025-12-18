@@ -73,8 +73,14 @@ export const clearUserFromDB = async () => {
 export const saveTaskToDB = async (task: any) => {
   const database = await db;
   await database.executeSql(
-    `INSERT INTO task (id, title, description, completed) VALUES (?, ?, ?, ?)`,
-    [task.id, task.title, task.description, task.completed ? 1 : 0],
+    `INSERT INTO task (id, title, description, completed, synced) VALUES (?, ?, ?, ?, ?)`,
+    [
+      task.id,
+      task.title,
+      task.description,
+      task.completed ? 1 : 0,
+      task.synced ? 1 : 0,
+    ],
   );
 };
 
@@ -84,16 +90,34 @@ export const getTasksFromDB = async () => {
   const rows = result[0].rows;
   const tasks: any[] = [];
   for (let i = 0; i < rows.length; i++) {
-    const row = rows.item(i);
+    const res = rows.item(i);
     tasks.push({
-      id: row.id,
-      title: row.title,
-      description: row.description,
-      completed: row.completed === 1,
+      id: res.id,
+      title: res.title,
+      description: res.description,
+      completed: res.completed === 1,
+      synced: res.synced === 1,
     });
   }
   return tasks;
 };
+
+export const updateTaskInDB = async (task: any) => {
+  const database = await db;
+  await database.executeSql(
+    `UPDATE task
+     SET title = ?, description = ?, completed = ?, synced = ?
+     WHERE id = ?`,
+    [
+      task.title,
+      task.description,
+      task.completed ? 1 : 0,
+      task.synced ? 1 : 0,
+      task.id,
+    ]
+  );
+};
+
 
 export const deleteTaskFromDB = async (id: string) => {
   const database = await db;

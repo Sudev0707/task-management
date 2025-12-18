@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
 import React from 'react';
 
 export type Task = {
@@ -21,6 +21,9 @@ const TaskComponent: React.FC<Props> = ({
   onDelete,
   onToggleComplete,
 }) => {
+
+    const theme = useColorScheme();
+    const styles = getStyles(theme === 'dark');
   return (
     <View
       style={[
@@ -97,21 +100,25 @@ const TaskComponent: React.FC<Props> = ({
 
 export default TaskComponent;
 
-const styles = StyleSheet.create({
+const getStyles = (isDarkMode: boolean) =>StyleSheet.create({
   container: {
     padding: 16,
     borderRadius: 12,
-    backgroundColor: '#F6FFFA',
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#DFF5EA',
+    backgroundColor: isDarkMode ? '#1e1e1e' : '#F6FFFA',
+      borderWidth: 1,
+      borderColor: isDarkMode ? '#333' : '#DFF5EA',
   },
 
   completedContainer: {
-    backgroundColor: '#F1F1F1',
-    borderColor: '#E0E0E0',
+    backgroundColor: isDarkMode ? '#2a2a2a' : '#F1F1F1',
+      borderColor: isDarkMode ? '#444' : '#E0E0E0',
   },
-
+ id: {
+      fontSize: 11,
+      marginBottom: 6,
+      color: isDarkMode ? '#888' : '#999',
+    },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -146,18 +153,18 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#222',
+   color: isDarkMode ? '#fff' : '#222',
   },
 
   description: {
     marginTop: 4,
     fontSize: 14,
-    color: '#666',
+    color: isDarkMode ? '#bbb' : '#666',
   },
 
   completedText: {
     textDecorationLine: 'line-through',
-    color: '#9E9E9E',
+   color: isDarkMode ? '#777' : '#9E9E9E',
   },
 
   actions: {
@@ -170,7 +177,7 @@ const styles = StyleSheet.create({
   status: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#555',
+    color: isDarkMode ? '#aaa' : '#555',
   },
 
   buttons: {

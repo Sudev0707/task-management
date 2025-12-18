@@ -60,7 +60,8 @@ const AppInitializer = () => {
       if (user) dispatch(storeUser(user));
 
       const tasks = await getTasksFromDB();
-      console.log('Tasks loaded:', tasks);
+      const syncTasks = await getTasksFromDB();
+      console.log('Tasks loaded:', syncTasks);
 
       // Sync unsynced tasks to Firestore
       await syncTasksToFirestore();

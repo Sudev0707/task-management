@@ -6,6 +6,8 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
+  useColorScheme,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import TaskComponent, { Task } from '../../component/TaskComponent';
@@ -14,46 +16,103 @@ import EditTask from './EditTask';
 import uuid from 'react-native-uuid';
 import { useDispatch, useSelector } from 'react-redux';
 import { clearUser } from '../../redux/slice';
-import { getUserFromDB } from '../../sqlite/database';
+import {
+  deleteTaskFromDB,
+  getTasksFromDB,
+  getUserFromDB,
+  saveTaskToDB,
+} from '../../sqlite/database';
+import { loadTasksAsync } from '../../redux/taskThunks';
+// import { addTask } from '../../redux/taskSlice';
 
 const TaskDashboard: React.FC = () => {
   const [showAddTask, setShowAddTask] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(false);
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<any>();
   const [tasks, setTasks] = useState<Task[]>([]);
-   const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<any>(null);
 
-    const [displayedTasks, setDisplayedTasks] = useState<Task[]>([]);
+  const [displayedTasks, setDisplayedTasks] = useState<Task[]>([]);
   const [page, setPage] = useState(1);
+  const [loadingTasks, setLoadingTasks] = useState(true);
+
+  const theme = useColorScheme();
+  const styles = getStyles(theme === 'dark');
 
   const userEmail = useSelector((state: any) => state.user.user.email);
+  const taskFromStore = useSelector((state: any) => state.tasks.tasks);
+  console.log(taskFromStore, 'bhgjghjgh');
+
   if (!userEmail) {
     return <Text>...</Text>;
   }
   console.log(tasks, 'tasks');
 
+  // useEffect(() => {
+  //   dispatch(loadTasksAsync());
+  // }, [dispatch]);
+
+  // get user
+  const loadDbUser = async () => {
+    const dbUser = await getUserFromDB();
+    console.log('dbUser', dbUser);
+    setUser(dbUser);
+  };
+
+  // get task
+  const loadTasks = async () => {
+    const dbTasks = await getTasksFromDB();
+    setTasks(dbTasks);
+    // setTasks(taskFromStore);
+  };
   useEffect(() => {
-    const loadDbUser = async () => {
-      const dbUser = await getUserFromDB();
-      console.log('dbUser', dbUser);
-      setUser(dbUser)
-    };
-    loadDbUser();
+    loadTasks();
   }, []);
 
   //
-  const addTask = (task: Task) => {
-    setTasks(prev => [...prev, { ...task, completed: false }]);
-    setShowAddTask(false);
-  };
+  useEffect(() => {
+    const loadTasks = async () => {
+      setLoadingTasks(true);
+      const dbTasks = await getTasksFromDB();
+      setTasks(dbTasks);
+      setLoadingTasks(false);
+    };
+
+    loadTasks();
+  }, []);
 
   //
-  const toggleComplete = (task: Task) => {
-    setTasks(prev =>
-      prev.map(t => (t.id === task.id ? { ...t, completed: !t.completed } : t)),
-    );
+  // const addTask = async (task: Task) => {
+  //   setTasks(prev => [...prev, { ...task, completed: false }]);
+  //   await saveTaskToDB(task)
+  //   setShowAddTask(false);
+  // };
+  //
+  // const addTaskHandler = async (task: Task) => {
+  //   const newTask = {
+  //     ...task,
+  //     completed: false,
+  //     synced: false,
+  //     createdAt: Date.now(),
+  //   };
+
+  //   dispatch(addTask(newTask));
+
+  //   await saveTaskToDB(newTask);
+
+  //   setShowAddTask(false);
+  // };
+
+  //
+  const toggleComplete = async (task: Task) => {
+    const updated = { ...task, completed: !task.completed };
+    setTasks(prev => prev.map(t => (t.id === task.id ? updated : t)));
+    // setTasks(prev =>
+    //   prev.map(t => (t.id === task.id ? { ...t, completed: !t.completed } : t)),
+    // );
+    await saveTaskToDB(updated);
   };
 
   //
@@ -62,7 +121,7 @@ const TaskDashboard: React.FC = () => {
     setShowEdit(true);
   };
 
-  const handleSave = (updatedTask: Task) => {
+  const handleUpdate = (updatedTask: Task) => {
     setTasks(prev =>
       prev.map(t => (t.id === updatedTask.id ? updatedTask : t)),
     );
@@ -71,34 +130,11 @@ const TaskDashboard: React.FC = () => {
   };
 
   // 🗑 Delete
-  const deleteTask = (task: Task) => {
+  const deleteTask = async (task: Task) => {
     setTasks(prev => prev.filter(t => t.id !== task.id));
+    // await deleteTaskFromDB(task.id);
   };
 
-  //
-
-  const TASKS_PER_PAGE = 10;
- 
-  const hasMore = displayedTasks.length < tasks.length;
-
-  const loadMoreTasks = () => {
-    if (loading) return;
-
-    const nextPage = page + 1;
-    const start = (nextPage - 1) * TASKS_PER_PAGE;
-    const end = start + TASKS_PER_PAGE;
-
-    const nextTasks = tasks.slice(start, end);
-    if (nextTasks.length === 0) return; // No more tasks
-
-    setLoading(true);
-
-    setTimeout(() => {
-      setDisplayedTasks(prev => [...prev, ...nextTasks]);
-      setPage(nextPage);
-      setLoading(false);
-    }, 300); // small delay for smooth effect
-  };
   //
 
   const handleLogout = () => {
@@ -108,18 +144,18 @@ const TaskDashboard: React.FC = () => {
   return (
     <>
       <SafeAreaView style={styles.container}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <Text>{userEmail}</Text>
-          <TouchableOpacity
-            style={{ padding: 7, backgroundColor: '#ffeeedff' }}
-            onPress={handleLogout}
-          >
-            <Text style={{ fontWeight: 800 }}>logout</Text>
+        <View style={styles.header}>
+          <Text style={styles.email}>{userEmail}</Text>
+          <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+            <Text style={styles.logoutText}>logout</Text>
           </TouchableOpacity>{' '}
         </View>
         <Text>{user?.email}</Text>
         {showAddTask ? (
-          <AddTask addTask={addTask} onBack={() => setShowAddTask(false)} />
+          <AddTask
+            // addTask={addTaskHandler}
+            onBack={() => setShowAddTask(false)}
+          />
         ) : (
           <>
             <Text style={styles.heading}>Task Dashboard</Text>
@@ -136,15 +172,7 @@ const TaskDashboard: React.FC = () => {
                   onEdit={handleEdit}
                 />
               )}
-              onEndReached={loadMoreTasks}
               onEndReachedThreshold={0.5} // Trigger when 50% from the bottom
-              ListFooterComponent={
-                loading && hasMore ? (
-                  <Text style={{ textAlign: 'center', padding: 10 }}>
-                    Loading...
-                  </Text>
-                ) : null
-              }
             />
             <TouchableOpacity
               style={styles.addBtn}
@@ -163,7 +191,7 @@ const TaskDashboard: React.FC = () => {
           setShowEdit(false);
           setSelectedTask(null);
         }}
-        onSave={handleSave}
+        onSave={handleUpdate}
       />
     </>
   );
@@ -171,27 +199,76 @@ const TaskDashboard: React.FC = () => {
 
 export default TaskDashboard;
 
-// const getStyles = (isDarkMode: boolean) => StyleSheet.create({});
+const getStyles = (isDarkMode: boolean) =>
+  StyleSheet.create({
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: 14,
+      borderRadius: 12,
+      backgroundColor: isDarkMode ? '#1E1E1E' : '#FFFFFF',
+      marginBottom: 16,
+      borderWidth: 1,
+      borderColor: isDarkMode ? '#2C2C2C' : '#EEE',
+    },
+    email: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: isDarkMode ? '#EAEAEA' : '#333',
+      flex: 1,
+      marginRight: 10,
+    },
+    logoutBtn: {
+      paddingVertical: 8,
+      paddingHorizontal: 14,
+      // backgroundColor: '#FFEBE9',
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: '#FF6B5F',
+    },
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: '#fff',
-  },
-  heading: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 12,
-  },
-  addBtn: {
-    backgroundColor: '#007bff',
-    padding: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  addText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-});
+    logoutText: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: '#D32F2F',
+      textTransform: 'uppercase',
+    },
+
+    container: {
+      flex: 1,
+      padding: 16,
+      backgroundColor: isDarkMode ? '#121212' : '#fff',
+    },
+    heading: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      marginBottom: 12,
+      color: isDarkMode ? '#fff' : '#000',
+    },
+    text: {
+      color: isDarkMode ? '#fff' : '#000',
+    },
+    addBtn: {
+      backgroundColor: isDarkMode ? '#1E88E5' : '#007bff',
+      padding: 14,
+      borderRadius: 8,
+      alignItems: 'center',
+    },
+    addText: {
+      color: '#fff',
+      fontWeight: 'bold',
+    },
+    // logoutBtn: {
+    //   padding: 7,
+    //   backgroundColor: isDarkMode ? '#333' : '#ffeeedff',
+    //   borderRadius: 4,
+    // },
+
+    // logoutText: {
+    //   fontWeight: 'bold',
+    //   color: isDarkMode ? '#fff' : '#000',
+    // },
+  });
+
+// const styles =

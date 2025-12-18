@@ -5,6 +5,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  useColorScheme,
   View,
 } from 'react-native';
 import { Task } from '../../component/TaskComponent';
@@ -20,13 +21,16 @@ const EditTask: React.FC<Props> = ({ visible, task, onClose, onSave }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
 
+  const theme = useColorScheme(); // detect system theme
+  const styles = getStyles(theme === 'dark');
+
   useEffect(() => {
     if (task) {
       setTitle(task.title);
       setDescription(task.description);
-    }else{
-        setTitle('')
-        setDescription('')
+    } else {
+      setTitle('');
+      setDescription('');
     }
   }, [task]);
 
@@ -82,67 +86,72 @@ const EditTask: React.FC<Props> = ({ visible, task, onClose, onSave }) => {
 
 export default EditTask;
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'center',
-    padding: 20,
-  },
+const getStyles = (isDarkMode: boolean) =>
+  StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.4)',
+      justifyContent: 'center',
+      padding: 20,
+    },
 
-  container: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 20,
-  },
+    container: {
+       backgroundColor: isDarkMode ? '#1e1e1e' : '#fff',
+      borderRadius: 14,
+      padding: 20,
+    },
 
-  header: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
+    header: {
+      fontSize: 18,
+      fontWeight: '700',
+      marginBottom: 16,
+      textAlign: 'center',
+       color: isDarkMode ? '#fff' : '#000',
+    },
 
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 12,
-    fontSize: 15,
-  },
+    input: {
+      borderWidth: 1,
+     borderColor: isDarkMode ? '#444' : '#ddd',
+      backgroundColor: isDarkMode ? '#2a2a2a' : '#f9f9f9',
+      color: isDarkMode ? '#fff' : '#000',
+      borderRadius: 10,
+      padding: 12,
+      marginBottom: 12,
+      fontSize: 15,
+    },
 
-  textArea: {
-    height: 90,
-    textAlignVertical: 'top',
-  },
+    textArea: {
+      height: 90,
+      textAlignVertical: 'top',
+    },
 
-  actions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 16,
-  },
+    actions: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      marginTop: 16,
+    },
 
-  cancelBtn: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    marginRight: 10,
-  },
+    cancelBtn: {
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+      marginRight: 10,
+    },
 
-  cancelText: {
-    color: '#666',
-    fontWeight: '600',
-  },
+    cancelText: {
+      color: isDarkMode ? '#ccc' : '#666',
+      fontWeight: '600',
 
-  saveBtn: {
-    backgroundColor: '#1E90FF',
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-    borderRadius: 8,
-  },
+    },
 
-  saveText: {
-    color: '#fff',
-    fontWeight: '700',
-  },
-});
+    saveBtn: {
+      backgroundColor: '#1E90FF',
+      paddingVertical: 10,
+      paddingHorizontal: 18,
+      borderRadius: 8,
+    },
+
+    saveText: {
+      color: '#fff',
+      fontWeight: '700',
+    },
+  });
