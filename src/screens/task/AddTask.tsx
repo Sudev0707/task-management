@@ -17,10 +17,10 @@ import { addTaskAsync } from '../../redux/taskThunks';
 type Props = {
   //   addTask: (task: Task) => void;
   onBack: () => void;
-  //    onTaskAdded: () => void;
+     onTaskAdded: () => void;
 };
 
-const AddTask: React.FC<Props> = ({ onBack }) => {
+const AddTask: React.FC<Props> = ({ onBack, onTaskAdded }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const dispatch = useDispatch<any>();
@@ -53,6 +53,7 @@ const AddTask: React.FC<Props> = ({ onBack }) => {
     setTitle('');
     setDescription('');
     onBack();
+    onTaskAdded();
   };
 
   return (

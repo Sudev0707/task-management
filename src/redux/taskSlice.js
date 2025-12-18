@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { addTaskAsync, loadTasksAsync, updateTaskAsync } from './taskThunks';
+import { addTaskAsync, deleteTaskAsync, loadTasksAsync, updateTaskAsync } from './taskThunks';
 
 const initialState = {
     tasks: [],
@@ -56,7 +56,17 @@ export const taskSlice = createSlice({
                 if (index !== -1) {
                     state.tasks[index] = action.payload;
                 }
-            });
+            })
+
+            .addCase(deleteTaskAsync.fulfilled, (state, action) => {
+                state.tasks = state.tasks.filter(
+                    t => t.id !== action.payload
+                );
+            })
+
+
+
+
     },
 
 

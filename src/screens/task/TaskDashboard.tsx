@@ -8,6 +8,8 @@ import {
   ScrollView,
   useColorScheme,
   ActivityIndicator,
+  StatusBar,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import TaskComponent, { Task } from '../../component/TaskComponent';
@@ -22,21 +24,23 @@ import {
   getUserFromDB,
   saveTaskToDB,
 } from '../../sqlite/database';
-import { loadTasksAsync } from '../../redux/taskThunks';
+import { deleteTaskAsync, loadTasksAsync } from '../../redux/taskThunks';
 // import { addTask } from '../../redux/taskSlice';
 
 const TaskDashboard: React.FC = () => {
   const [showAddTask, setShowAddTask] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
   const dispatch = useDispatch<any>();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [user, setUser] = useState<any>(null);
 
   const [displayedTasks, setDisplayedTasks] = useState<Task[]>([]);
-  const [page, setPage] = useState(1);
-  const [loadingTasks, setLoadingTasks] = useState(true);
+  // const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const theme = useColorScheme();
   const styles = getStyles(theme === 'dark');
@@ -45,9 +49,16 @@ const TaskDashboard: React.FC = () => {
   const taskFromStore = useSelector((state: any) => state.tasks.tasks);
   console.log(taskFromStore, 'bhgjghjgh');
 
-  if (!userEmail) {
-    return <Text>...</Text>;
-  }
+  const onRefresh = async () => {
+    if (loading) return;
+    setRefreshing(true);
+
+    const dbTasks = await getTasksFromDB();
+    setTasks(dbTasks);
+
+    setRefreshing(false);
+  };
+
   console.log(tasks, 'tasks');
 
   // useEffect(() => {
@@ -55,33 +66,32 @@ const TaskDashboard: React.FC = () => {
   // }, [dispatch]);
 
   // get user
-  const loadDbUser = async () => {
-    const dbUser = await getUserFromDB();
-    console.log('dbUser', dbUser);
-    setUser(dbUser);
-  };
 
   // get task
+
+  useEffect(() => {
+    const loadDbUser = async () => {
+      const dbUser = await getUserFromDB();
+      console.log('dbUser', dbUser);
+      setUser(dbUser);
+    };
+    loadDbUser();
+  }, []);
+
+  // ------------------
   const loadTasks = async () => {
+    setLoading(true);
     const dbTasks = await getTasksFromDB();
     setTasks(dbTasks);
-    // setTasks(taskFromStore);
+    setLoading(false);
   };
   useEffect(() => {
     loadTasks();
-  }, []);
+  }, [refreshKey]);
 
-  //
-  useEffect(() => {
-    const loadTasks = async () => {
-      setLoadingTasks(true);
-      const dbTasks = await getTasksFromDB();
-      setTasks(dbTasks);
-      setLoadingTasks(false);
-    };
-
-    loadTasks();
-  }, []);
+  const refreshTasks = () => {
+    setRefreshKey(prev => prev + 1);
+  };
 
   //
   // const addTask = async (task: Task) => {
@@ -130,32 +140,43 @@ const TaskDashboard: React.FC = () => {
   };
 
   // 🗑 Delete
-  const deleteTask = async (task: Task) => {
-    setTasks(prev => prev.filter(t => t.id !== task.id));
+  const deleteTask = (task: Task) => {
+    // setTasks(prev => prev.filter(t => t.id !== task.id));
     // await deleteTaskFromDB(task.id);
+    dispatch(deleteTaskAsync(task.id));
+    dispatch(loadTasksAsync());
+    loadTasks();
   };
 
   //
 
   const handleLogout = () => {
-    dispatch(clearUser()); // ✅ clear Redux user
+    dispatch(clearUser());
   };
 
   return (
     <>
       <SafeAreaView style={styles.container}>
+        <StatusBar barStyle={theme ? 'light-content' : 'dark-content'} />
         <View style={styles.header}>
           <Text style={styles.email}>{userEmail}</Text>
           <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
             <Text style={styles.logoutText}>logout</Text>
           </TouchableOpacity>{' '}
         </View>
-        <Text>{user?.email}</Text>
+        {/* <Text>{user?.email}</Text> */}
+        {/* <Text>new: {refreshKey} </Text> */}
         {showAddTask ? (
           <AddTask
             // addTask={addTaskHandler}
             onBack={() => setShowAddTask(false)}
+            onTaskAdded={refreshTasks}
           />
+        ) : loading ? (
+          <View style={styles.loaderContainer}>
+            <ActivityIndicator size="large" color="#007bff" />
+            <Text style={styles.loaderText}>Loading tasks...</Text>
+          </View>
         ) : (
           <>
             <Text style={styles.heading}>Task Dashboard</Text>
@@ -172,7 +193,10 @@ const TaskDashboard: React.FC = () => {
                   onEdit={handleEdit}
                 />
               )}
-              onEndReachedThreshold={0.5} // Trigger when 50% from the bottom
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+              }
+              // onEndReachedThreshold={0.5}
             />
             <TouchableOpacity
               style={styles.addBtn}
@@ -259,16 +283,16 @@ const getStyles = (isDarkMode: boolean) =>
       color: '#fff',
       fontWeight: 'bold',
     },
-    // logoutBtn: {
-    //   padding: 7,
-    //   backgroundColor: isDarkMode ? '#333' : '#ffeeedff',
-    //   borderRadius: 4,
-    // },
+    loaderContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
 
-    // logoutText: {
-    //   fontWeight: 'bold',
-    //   color: isDarkMode ? '#fff' : '#000',
-    // },
+    loaderText: {
+      marginTop: 10,
+      color: '#555',
+    },
   });
 
 // const styles =
