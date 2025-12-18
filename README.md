@@ -1,6 +1,8 @@
 # Task Manager App
 
-A **React Native CLI** offline-first task manager app with **local SQLite storage** and **Redux state management**, capable of syncing tasks to **Firestore** when online, with **persisted user sessions using SQLite**.
+A React Native CLI Task Management mobile application built with an offline-first architecture, using SQLite for local data storage and Redux Toolkit for centralized state management. Tasks are created, updated, and toggled locally.
+
+The app supports Firebase Authentication for user login/signup with persistent sessions stored in SQLite. When online, tasks automatically sync to Firestore, keeping local and cloud data consistent. task reminders via notifications, pull-to-refresh, and  dark/light mode support.
 
 
 ---
