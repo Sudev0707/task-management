@@ -132,9 +132,11 @@ const TaskDashboard: React.FC = () => {
   };
 
   const handleUpdate = (updatedTask: Task) => {
+    
     setTasks(prev =>
       prev.map(t => (t.id === updatedTask.id ? updatedTask : t)),
     );
+
     setShowEdit(false);
     setSelectedTask(null);
   };
@@ -149,7 +151,7 @@ const TaskDashboard: React.FC = () => {
   };
 
   //
-  
+
 
   const handleLogout = () => {
     dispatch(clearUser());

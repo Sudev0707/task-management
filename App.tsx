@@ -9,6 +9,10 @@ import { store } from './src/redux/store';
 import { clearUser, storeUser } from './src/redux/slice';
 import { getTasksFromDB, getUserFromDB, initDB } from './src/sqlite/database';
 import { syncTasksToFirestore } from './src/utils/firestoresync';
+import { requestNotificationPermission } from './src/utils/notifications';
+import { getFCMToken } from './src/utils/firebase';
+import { getMessaging } from '@react-native-firebase/messaging';
+import messaging from '@react-native-firebase/messaging';
 
 console.log('Firebase Auth loaded:', auth);
 
@@ -85,8 +89,44 @@ const AppInitializer = () => {
   return <Navigation />;
 };
 
+// Background message handler
+messaging().setBackgroundMessageHandler(async remoteMessage => {
+  console.log('FCM Background Message:', remoteMessage);
+});
+
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
+  // useEffect(() => {
+  //   requestNotificationPermission();
+  // }, []);
+
+  //--------
+
+  useEffect(() => {
+    const initNotifications = async () => {
+      // Local notifications permission
+      await requestNotificationPermission();
+
+      // FCM permission and token
+      const token = await getFCMToken();
+      console.log('FCM Token:', token);
+
+      // Listen for foreground messages
+      const unsubscribe = messaging().onMessage(async remoteMessage => {
+        console.log('FCM Message received:', remoteMessage);
+        // Show local notification if you want
+      });
+
+      return unsubscribe; // cleanup
+    };
+
+    const unsubscribePromise = initNotifications();
+
+    // 
+    return () => {
+      unsubscribePromise.then(unsub => unsub && unsub());
+    };
+  }, []);
 
   return (
     <>

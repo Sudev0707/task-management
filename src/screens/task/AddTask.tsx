@@ -13,11 +13,12 @@ import uuid from 'react-native-uuid';
 import { useDispatch } from 'react-redux';
 import { addTaskAsync } from '../../redux/taskThunks';
 // import { addTask } from '../../redux/taskSlice';
+import { scheduleTaskReminder } from '../../utils/notifications';
 
 type Props = {
   //   addTask: (task: Task) => void;
   onBack: () => void;
-     onTaskAdded: () => void;
+  onTaskAdded: () => void;
 };
 
 const AddTask: React.FC<Props> = ({ onBack, onTaskAdded }) => {
@@ -29,7 +30,7 @@ const AddTask: React.FC<Props> = ({ onBack, onTaskAdded }) => {
   const theme = useColorScheme();
   const styles = getStyles(theme === 'dark');
 
-  const handleAddTask = () => {
+  const handleAddTask = async () => {
     if (isDisabled) return;
     const task = {
       id: uuid.v4().toString(),
@@ -49,6 +50,14 @@ const AddTask: React.FC<Props> = ({ onBack, onTaskAdded }) => {
     //   completed: false,
     //   //   date: Date.now()
     // });
+    // reminder
+    const oneHourLater = Date.now() + 60 * 60 * 1000;
+    const oneMinuteLater = Date.now() + 1 * 60 * 1000;
+    await scheduleTaskReminder(
+      task.title,
+      'Don’t forget to complete your task!',
+      oneMinuteLater,
+    );
 
     setTitle('');
     setDescription('');
