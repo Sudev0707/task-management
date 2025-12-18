@@ -39,7 +39,7 @@ The app supports Firebase Authentication for user login/signup with persistent s
 - Offline support with SQLite.  
 - Cloud sync (Firestore) when online.  
 - Loader and smooth UI for data operations.
-- Task reminder with notification.
+- Task reminder with notification (notification appear after one minute of task creation).
 - dark / light mode 
 
 ---
