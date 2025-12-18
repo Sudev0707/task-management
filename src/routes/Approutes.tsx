@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense } from 'react';
+import { View, ActivityIndicator } from 'react-native';
 import { useSelector } from 'react-redux';
 import { createStackNavigator } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
@@ -8,11 +9,21 @@ const Stack = createStackNavigator();
 export default function AppRoutes() {
   return (
     <>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="DashBoard" component={Screens.DashBoard} />
-        {/* <Stack.Screen name="AddTask" component={Screens.AddTask} />
+      <Suspense
+        fallback={
+          <View
+            style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+          >
+            <ActivityIndicator size="large" color="#070736ff" />
+          </View>
+        }
+      >
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="DashBoard" component={Screens.DashBoard} />
+          {/* <Stack.Screen name="AddTask" component={Screens.AddTask} />
         <Stack.Screen name="EditTask" component={Screens.EditTask} /> */}
-      </Stack.Navigator>
+        </Stack.Navigator>
+      </Suspense>
     </>
   );
 }
