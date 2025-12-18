@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { addTaskAsync, deleteTaskAsync, loadTasksAsync, updateTaskAsync } from './taskThunks';
+import { addTaskAsync, deleteTaskAsync, loadTasksAsync, toggleCompleteAsync, updateTaskAsync } from './taskThunks';
 
 const initialState = {
     tasks: [],
@@ -54,7 +54,7 @@ export const taskSlice = createSlice({
                     t => t.id === action.payload.id
                 );
                 if (index !== -1) {
-                    state.tasks[index] = action.payload;
+                    state.tasks[index] = action.payload; // update store
                 }
             })
 
@@ -63,6 +63,25 @@ export const taskSlice = createSlice({
                     t => t.id !== action.payload
                 );
             })
+
+            .addCase(toggleCompleteAsync.fulfilled, (state, action) => {
+                const index = state.list.findIndex(
+                    t => t.id === action.payload.id
+                );
+
+                if (index !== -1) {
+                    state.list[index] = action.payload; // ✅ REPLACE OBJECT
+                }
+            });
+
+        // .addCase(toggleCompleteAsync.fulfilled, (state, action) => {
+        //     const index = state.tasks.findIndex(
+        //         t => t.id === action.payload.id
+        //     );
+        //     if (index !== -1) {
+        //         state.tasks[index] = action.payload;
+        //     }
+        // });
 
 
 

@@ -24,7 +24,12 @@ import {
   getUserFromDB,
   saveTaskToDB,
 } from '../../sqlite/database';
-import { deleteTaskAsync, loadTasksAsync } from '../../redux/taskThunks';
+import {
+  deleteTaskAsync,
+  loadTasksAsync,
+  toggleCompleteAsync,
+  updateTaskAsync,
+} from '../../redux/taskThunks';
 // import { addTask } from '../../redux/taskSlice';
 
 const TaskDashboard: React.FC = () => {
@@ -80,7 +85,7 @@ const TaskDashboard: React.FC = () => {
 
   // ------------------
   const loadTasks = async () => {
-    setLoading(true);
+    // setLoading(true);
     const dbTasks = await getTasksFromDB();
     setTasks(dbTasks);
     setLoading(false);
@@ -116,13 +121,15 @@ const TaskDashboard: React.FC = () => {
   // };
 
   //
-  const toggleComplete = async (task: Task) => {
+  const toggleComplete = (task: Task) => {
     const updated = { ...task, completed: !task.completed };
-    setTasks(prev => prev.map(t => (t.id === task.id ? updated : t)));
+    // setTasks(prev => prev.map(t => (t.id === task.id ? updated : t)));
     // setTasks(prev =>
     //   prev.map(t => (t.id === task.id ? { ...t, completed: !t.completed } : t)),
     // );
-    await saveTaskToDB(updated);
+    dispatch(toggleCompleteAsync(task));
+    // await saveTaskToDB(updated);
+     loadTasks();
   };
 
   //
@@ -131,11 +138,11 @@ const TaskDashboard: React.FC = () => {
     setShowEdit(true);
   };
 
-  const handleUpdate = (updatedTask: Task) => {
-    
+  const handleUpdate = async (updatedTask: Task) => {
     setTasks(prev =>
       prev.map(t => (t.id === updatedTask.id ? updatedTask : t)),
     );
+    await dispatch(updateTaskAsync(updatedTask));
 
     setShowEdit(false);
     setSelectedTask(null);
@@ -151,7 +158,6 @@ const TaskDashboard: React.FC = () => {
   };
 
   //
-
 
   const handleLogout = () => {
     dispatch(clearUser());
@@ -186,6 +192,7 @@ const TaskDashboard: React.FC = () => {
             <Text style={styles.heading}>Total task: {tasks.length}</Text>
             <FlatList
               data={tasks}
+              extraData={tasks}
               keyExtractor={item => item.id!}
               showsVerticalScrollIndicator={false}
               renderItem={({ item }) => (

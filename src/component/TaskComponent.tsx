@@ -2,10 +2,11 @@ import { StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-
 import React from 'react';
 
 export type Task = {
-  id?: string;
+  id: string;
   title: string;
   description: string;
   completed: boolean;
+  // synced?: boolean;
 };
 
 interface Props {
@@ -80,7 +81,8 @@ const TaskComponent: React.FC<Props> = ({
 
         <View style={styles.buttons}>
           <TouchableOpacity
-            style={styles.editBtn}
+            
+            style={[styles.editBtn, data.completed && { opacity: 0.5 }]}
             onPress={() => onEdit?.(data)}
           >
             <Text style={styles.editText}>Edit</Text>

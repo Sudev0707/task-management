@@ -1,7 +1,10 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { getTasksFromDB, saveTaskToDB, deleteTaskFromDB } from '../sqlite/database';
 import { updateTaskInDB } from '../sqlite/database';
+import { Task } from '../component/TaskComponent';
 
+
+// 
 export const loadTasksAsync = createAsyncThunk(
   'tasks/loadTasksAsync',
   async () => {
@@ -22,7 +25,7 @@ export const addTaskAsync = createAsyncThunk(
 export const updateTaskAsync  = createAsyncThunk(
   'tasks/updateTaskAsync ',
   async (task: any) => {
-    await saveTaskToDB(task);
+    await updateTaskInDB(task);
     return task; 
   }
 );
@@ -34,5 +37,21 @@ export const deleteTaskAsync = createAsyncThunk(
     return taskId; // return id to reducer
   }
 );
+
+// ------------
+export const toggleCompleteAsync = createAsyncThunk(
+  'tasks/toggleComplete',
+  async (task: Task) => {
+    const updatedTask = {
+      ...task,
+      completed: !task.completed, 
+      synced: false,
+    };
+
+    await updateTaskInDB(updatedTask); //  SAVE FINAL VALUE
+    return updatedTask;                // RETURN FINAL VALUE
+  }
+);
+
 
 
