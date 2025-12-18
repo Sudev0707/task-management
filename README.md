@@ -74,6 +74,7 @@ A **React Native CLI** offline-first task manager app with **local SQLite storag
 ```bash
 git clone https://github.com/<your-username>/task-manager-app.git
 cd task-manager-app
+git checkout dev 
 npm install
 ```
 
