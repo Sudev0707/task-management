@@ -25,6 +25,9 @@ const TaskComponent: React.FC<Props> = ({
 
     const theme = useColorScheme();
     const styles = getStyles(theme === 'dark');
+
+    // console.log('task data', data);
+    
   return (
     <View
       style={[
@@ -32,7 +35,7 @@ const TaskComponent: React.FC<Props> = ({
         data.completed && styles.completedContainer,
       ]}
     >
-      <Text>ID: {data.id}</Text>
+      {/* <Text>ID: {data.id}</Text> */}
       <TouchableOpacity
         style={styles.row}
         activeOpacity={0.7}
