@@ -1,4 +1,4 @@
-# Task Manager App
+#  TaskSync (Ofline Task Manager App)
 
 A React Native CLI Task Management mobile application built with an offline-first architecture, using SQLite for local data storage and Redux Toolkit for centralized state management. Tasks are created, updated, and toggled locally.
 
